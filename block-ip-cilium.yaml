@@ -1,0 +1,14 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "ancile-talks-world"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: ancile-malicious
+  egress:
+    - toEntities:
+      - world
+  egressDeny:
+  - toCIDR:
+    - 1.1.1.1/32

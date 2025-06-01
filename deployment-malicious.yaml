@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ancile-malicious
+spec:
+  selector:
+    matchLabels:
+      app: ancile-malicious
+  replicas: 4 
+  template:
+    metadata:
+      labels:
+        app: ancile-malicious
+    spec:
+      containers:
+      - image: nherbaut/ancile-malicious:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 256m
+            memory: 256Mi
+          limits:
+            cpu: 512m
+            memory: 512Mi
+        imagePullPolicy: Always
+        name: ancile-malicious
