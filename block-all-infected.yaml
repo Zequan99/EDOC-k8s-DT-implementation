@@ -1,0 +1,15 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "ancile-block-all-infected-pods"
+spec:
+  endpointSelector:
+    matchLabels:
+      ancile-status: infected
+  ingressDeny:
+  - fromEntities:
+    - "all"
+  egressDeny:
+  - toEntities: 
+    - "all"
+
