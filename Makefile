@@ -23,7 +23,12 @@ Infect:
 		shuf -n1); \
 	echo "$$TARGET" > infected-pod.txt; \
 	echo "Selected pod: $$TARGET"; \
-	kubectl exec $$TARGET -- sh -c "ping 1.1.1.1 >> /var/log/cron.log 2>&1 &"
+	kubectl exec $$TARGET -- sh -c "\
+cat << 'EOF' > /etc/cron.d/malijob
+* * * * * root /bin/sh -c 'while true; do ping -c1 1.1.1.1 >/dev/null 2>&1; sleep 5; done'
+EOF
+chmod 0644 /etc/cron.d/malijob \
+"
 
 # === Observation ===
 
@@ -111,11 +116,13 @@ Unisolate-nodes:
 
 # === Eviction ===
 
-process-kill-infected:
-	@echo "Killing 'ping' process in infected pods..."; \
+file-delete-infected:
+	@echo "Deleting malicious cron job in infected pods..."; \
 	for pod in $$(make --no-print-directory _list-infected-pods); do \
 		echo "Processing pod: $$pod"; \
-		kubectl exec $$pod -- pkill -f ping || echo "No ping process in $$pod"; \
+		kubectl exec $$pod -- rm -f /etc/cron.d/malijob && \
+			echo "Removed /etc/cron.d/malijob from $$pod" || \
+			echo "No /etc/cron.d/malijob found in $$pod"; \
 	done
 
 Evict-pods:
