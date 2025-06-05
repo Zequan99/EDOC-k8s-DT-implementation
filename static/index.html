@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kubernetes Security Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    pre {
+      background: #f8f9fa;
+      padding: 1em;
+      white-space: pre-wrap;
+    }
+    .section {
+      margin-top: 2em;
+    }
+    .infected {
+      color: red;
+      font-weight: bold;
+    }
+    .blocked {
+      color: grey;
+      font-weight: bold;
+    }
+    .spinner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">Kubernetes Security Dashboard</h1>
+
+    <!-- Cluster Information -->
+    <div class="section">
+      <h2>Cluster Information</h2>
+      <div class="mb-2">
+        <button class="btn btn-outline-primary me-2" onclick="getInfo('/pods')">Get Pods</button>
+        <button class="btn btn-outline-primary me-2" onclick="getInfo('/nodes')">Get Nodes</button>
+        <button class="btn btn-outline-primary me-2" onclick="getInfo('/deployments')">Get Deployments</button>
+      </div>
+      <pre id="cluster-output"></pre>
+    </div>
+
+    <!-- Intent Management -->
+    <div class="section">
+      <h2>Intent Management</h2>
+      <div class="mb-2">
+        <button class="btn btn-danger me-2" onclick="perform('DELETE', '/pods/infected', 'intent-output')">Process Termination</button>
+        <button class="btn btn-danger me-2" onclick="perform('DELETE', '/deployments/infected', 'intent-output')">Executable Denylisting</button>
+        <button class="btn btn-danger me-2" onclick="perform('DELETE', '/nodes/infected', 'intent-output')">Host Shutdown</button>
+        <button class="btn btn-warning me-2" onclick="perform('POST', '/pods/infected/isolation', 'intent-output')">Network Traffic Filtering</button>
+        <button class="btn btn-danger me-2" onclick="perform('DELETE', '/process/infected', 'intent-output')">File Eviction</button>
+      </div>
+      <pre id="intent-output"></pre>
+    </div>
+
+    <!-- Experiment Management -->
+    <div class="section">
+      <h2>Experiment Management</h2>
+      <div class="mb-2">
+        <button class="btn btn-success me-2" onclick="perform('POST', '/experiment', 'experiment-output')">Setup</button>
+        <button class="btn btn-secondary me-2" onclick="perform('DELETE', '/experiment', 'experiment-output')">Clean</button>
+        <button class="btn btn-dark me-2" onclick="perform('POST', '/deployment', 'experiment-output')">Deploy</button>
+        <button class="btn btn-danger me-2" onclick="perform('DELETE', '/deployment', 'experiment-output')">Undeploy</button>
+        <button class="btn btn-warning me-2" onclick="perform('POST', '/attack', 'experiment-output')">Infect</button>
+        <button class="btn btn-info me-2" onclick="getInfo('/network/logs')">Observe</button>
+        <button class="btn btn-info me-2" onclick="getInfo('/network/logs/infected')">Observe Infected</button>
+        <button class="btn btn-info me-2" onclick="getInfo('/pods/logs')">Logs</button>
+        <button class="btn btn-success me-2" onclick="perform('POST', '/experiment/hubble', 'experiment-output')">Start Hubble</button>
+        <button class="btn btn-secondary me-2" onclick="perform('DELETE', '/pods/infected/isolation', 'experiment-output')">Unisolate Pods</button>
+        <button class="btn btn-secondary me-2" onclick="perform('DELETE', '/nodes/infected/isolation', 'experiment-output')">Unisolate Nodes</button>
+      </div>
+      <pre id="experiment-output"></pre>
+    </div>
+  </div>
+
+  <script>
+    function showSpinner(targetId) {
+      const el = document.getElementById(targetId);
+      el.innerHTML = `
+        <div class="spinner">
+          <div class="spinner-border text-primary" role="status"></div>
+          <strong>Processing...</strong>
+        </div>
+      `;
+    }
+
+    function perform(method, endpoint, outputId) {
+      showSpinner(outputId);
+      fetch(endpoint, { method })
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById(outputId).textContent = data || 'Action completed.';
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById(outputId).textContent = 'Error executing action.';
+        });
+    }
+
+    function getInfo(endpoint) {
+      const out = document.getElementById('cluster-output');
+      showSpinner('cluster-output');
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          let html = "<ul class='list-group'>";
+          for (let item of data) {
+            if (item.includes("DENIED") || item.includes("DROPPED")) {
+              html += `<li class="list-group-item blocked">${item}</li>`;
+            } else if (item.endsWith("*") || item.includes("1.1.1.1")) {
+              html += `<li class="list-group-item infected">${item}</li>`;
+            } else {
+              html += `<li class="list-group-item">${item}</li>`;
+            }
+          }
+          html += "</ul>";
+          out.innerHTML = html;
+        })
+        .catch(err => {
+          console.error(err);
+          out.innerHTML = '<div class="text-danger">Failed to fetch cluster information.</div>';
+        });
+    }
+  </script>
+</body>
+</html>
+

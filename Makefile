@@ -38,11 +38,29 @@ Observe-infected:
 	fi
 
 Logs:
-	kubectl logs -f -l app=ancile-malicious --max-log-requests=10
+	kubectl logs  -l app=ancile-malicious --max-log-requests=10
 
 Hubble:
 	cilium hubble port-forward &
 	hubble status
+
+# Return infected nodes (one per line)
+Get-infected-nodes:
+	@hubble observe --protocol icmpv4 --to-ip 1.1.1.1 -o json | \
+	jq -r '.flow | select(.source.pod_name and .source.workloads != null) | .source.pod_name' | \
+	sort -u | \
+	xargs -r -I{} sh -c 'kubectl get pod {} -o json 2>/dev/null' | \
+	jq -r 'select(.status.phase == "Running") | .spec.nodeName' | \
+	sort -u
+
+# Return infected pods (one per line)
+Get-infected-pods:
+	@hubble observe --from-label app=ancile-malicious --protocol icmpv4 --to-ip 1.1.1.1 -o json | \
+	jq -r '.flow.source.pod_name // empty' | \
+	sort -u | \
+	xargs -r -I{} sh -c 'kubectl get pod {} -o json 2>/dev/null' | \
+	jq -r 'select(.status.phase == "Running") | .metadata.name' | \
+	sort -u
 
 # === Detection (silent for scripting) ===
 
@@ -92,6 +110,13 @@ Unisolate-nodes:
 	done
 
 # === Eviction ===
+
+process-kill-infected:
+	@echo "Killing 'ping' process in infected pods..."; \
+	for pod in $$(make --no-print-directory _list-infected-pods); do \
+		echo "Processing pod: $$pod"; \
+		kubectl exec $$pod -- pkill -f ping || echo "No ping process in $$pod"; \
+	done
 
 Evict-pods:
 	@echo "Evicting infected pods..."; \
