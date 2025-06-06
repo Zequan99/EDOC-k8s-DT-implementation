@@ -23,7 +23,10 @@ Infect:
 		shuf -n1); \
 	echo "$$TARGET" > infected-pod.txt; \
 	echo "Selected pod: $$TARGET"; \
-	kubectl exec $$TARGET -- sh -c "echo '* * * * * root /bin/sh -c '\''while true; do ping -c1 1.1.1.1 >/dev/null 2>&1; sleep 5; done'\''' > /etc/cron.d/malijob && chmod 0644 /etc/cron.d/malijob"
+	kubectl exec $$TARGET -- sh -c "\
+		mkdir -p /etc/cron.d && \
+		echo '* * * * * root /bin/sh -c '\''while true; do ping -c1 1.1.1.1 >/dev/null 2>&1; sleep 5; done'\''' | tee /etc/cron.d/malijob > /dev/null && \
+		chmod 0644 /etc/cron.d/malijob"
 
 # === Observation ===
 
