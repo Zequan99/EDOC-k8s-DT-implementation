@@ -23,6 +23,9 @@ uvicorn api_server:app --host 0.0.0.0 --port 5000
 then open your browser at the address: http://localhost:5000/static/index.html
 
 # demo
+<img width="940" alt="image" src="https://github.com/user-attachments/assets/8c63ddb3-10c0-49b0-8a32-0e644362e36c" />
+<img width="937" alt="image" src="https://github.com/user-attachments/assets/25fba898-0b2c-4a88-b4f2-5134ac6287cc" />
+
 
 https://github.com/user-attachments/assets/ef7920a6-91b1-41bf-ac7c-7ae855ae69aa
 
