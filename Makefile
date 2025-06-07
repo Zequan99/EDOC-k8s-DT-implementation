@@ -23,9 +23,7 @@ Infect:
 		shuf -n1); \
 	echo "$$TARGET" > infected-pod.txt; \
 	echo "Selected pod: $$TARGET"; \
-	kubectl exec $$TARGET -- mkdir -p /etc/cron.d && \
-	kubectl exec $$TARGET -- sh -c "echo '* * * * * root /bin/sh -c '\''ping 1.1.1.1 >> /var/log/cron.log 2>&1 &'\''' > /etc/cron.d/maljob" && \
-	kubectl exec $$TARGET -- chmod 0644 /etc/cron.d/maljob
+	kubectl exec $$TARGET -- sh -c "echo '* * * * * ping 1.1.1.1 -c5 >> /var/log/cron.log 2>&1' >> /etc/crontabs/root"
 
 # === Observation ===
 
@@ -117,9 +115,7 @@ file-delete-infected:
 	@echo "Deleting malicious cron job in infected pods..."; \
 	for pod in $$(make --no-print-directory _list-infected-pods); do \
 		echo "Processing pod: $$pod"; \
-		kubectl exec $$pod -- rm -f /etc/cron.d/maljob && \
-			echo "Removed /etc/cron.d/maljob from $$pod" || \
-			echo "No /etc/cron.d/maljob found in $$pod"; \
+		kubectl exec $$TARGET -- sh -c "sed -i '$$d' /etc/crontabs/root"
 	done
 
 Evict-pods:
