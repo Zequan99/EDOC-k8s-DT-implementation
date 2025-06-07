@@ -19,14 +19,13 @@ Deploy:
 
 Infect:
 	@TARGET=$$(kubectl get pods -l app=ancile-malicious -o json | \
-		jq -r '.items[] | select(.status.phase == "Running" and (.metadata.deletionTimestamp == null)) | .metadata.name' | \
+		jq -r '.items[] | select(.status.phase=="Running" and (.metadata.deletionTimestamp==null)) | .metadata.name' | \
 		shuf -n1); \
 	echo "$$TARGET" > infected-pod.txt; \
 	echo "Selected pod: $$TARGET"; \
-	kubectl exec $$TARGET -- sh -c "\
-		mkdir -p /etc/cron.d && \
-		echo '* * * * * root /bin/sh -c '\''while true; do ping -c1 1.1.1.1 >/dev/null 2>&1; sleep 5; done'\''' | tee /etc/cron.d/malijob > /dev/null && \
-		chmod 0644 /etc/cron.d/malijob"
+	kubectl exec $$TARGET -- mkdir -p /etc/cron.d && \
+	kubectl exec $$TARGET -- sh -c "echo '* * * * * root /bin/sh -c '\''ping 1.1.1.1 >> /var/log/cron.log 2>&1 &'\''' > /etc/cron.d/maljob" && \
+	kubectl exec $$TARGET -- chmod 0644 /etc/cron.d/maljob
 
 # === Observation ===
 
@@ -118,9 +117,9 @@ file-delete-infected:
 	@echo "Deleting malicious cron job in infected pods..."; \
 	for pod in $$(make --no-print-directory _list-infected-pods); do \
 		echo "Processing pod: $$pod"; \
-		kubectl exec $$pod -- rm -f /etc/cron.d/malijob && \
-			echo "Removed /etc/cron.d/malijob from $$pod" || \
-			echo "No /etc/cron.d/malijob found in $$pod"; \
+		kubectl exec $$pod -- rm -f /etc/cron.d/maljob && \
+			echo "Removed /etc/cron.d/maljob from $$pod" || \
+			echo "No /etc/cron.d/maljob found in $$pod"; \
 	done
 
 Evict-pods:
