@@ -116,7 +116,7 @@ process-kill-infected:
 	@echo "Deleting malicious cron job in infected pods..."; \
 	for pod in $$(make --no-print-directory _list-infected-pods); do \
 		echo "Processing pod: $$pod"; \
-		kubectl exec $$TARGET -- sh -c "sed -i -e '$$d' -e '$$d' /etc/crontabs/root"
+		kubectl exec $$TARGET -- sh -c "sed -i -e '$$d' -e '$$d' /etc/crontabs/root" \
 	done
 
 Evict-pods:
