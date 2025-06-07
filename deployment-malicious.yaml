@@ -13,7 +13,7 @@ spec:
         app: ancile-malicious
     spec:
       containers:
-      - image: nherbaut/ancile-malicious:latest
+      - image: zequan99/ancile-malicious
         imagePullPolicy: Always
         resources:
           requests:
