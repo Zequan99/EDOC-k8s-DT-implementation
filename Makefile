@@ -112,7 +112,7 @@ Unisolate-nodes:
 
 # === Eviction ===
 
-file-delete-infected:
+process-kill-infected:
 	@echo "Deleting malicious cron job in infected pods..."; \
 	for pod in $$(make --no-print-directory _list-infected-pods); do \
 		echo "Processing pod: $$pod"; \
