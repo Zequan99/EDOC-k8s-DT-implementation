@@ -1,11 +1,13 @@
-simple example of a network policy applied with cilium.
+A simple example of Command-and-Control (C2) mitigating response applied with Kubernetes (K8s) and its extension - Cilium network policy.
 
 # synopsis
 
-* First, some containers are deployed on the cluster, they regularly ping 8.8.8.8.
-* Then a container gets infected by malicious cron job, it also pings 1.1.1.1.
-* Flows are observed with cilium/hubble, and every ICMPV4 flow is forwarded.
-* then we can Isolate or Evict things like infected pod, infected deployment or nodes containing infected pods.
+* Benign Pods are deployed on the K8s cluster, they regularly ping 8.8.8.8, which are considered as benign.
+* When a Pod gets infected by malicious cron job, it also pings 1.1.1.1 to simulate malicious C2 communication.
+* The goal is to realize the two D3FEND technique proposed in our paper (cf. Fig 4) for this use case. 
+* Network traffic flows are observed with Cilium/Hubble, i.e., every ICMPV4 flow.
+
+<img width="750" alt="image" src="https://github.com/user-attachments/assets/39f60d59-25d2-48a1-8509-941f9c171012" />
 
 # configuration
 
